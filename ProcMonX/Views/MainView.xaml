@@ -24,9 +24,9 @@
             <MenuItem Header="_Edit">
                 <MenuItem Header="_Copy" Command="Copy" Icon="{z:Image /icons/copy.ico, Width=20, Height=20}" />
             </MenuItem>
-            <MenuItem Header="_Montor">
-                <MenuItem Header="_Go" Icon="{z:Image /icons/play.ico, Width=20, Height=20}" />
-                <MenuItem Header="_Pause" Icon="{z:Image /icons/pause.ico, Width=20, Height=20}" />
+            <MenuItem Header="_Monitor">
+                <MenuItem Header="_Go" Icon="{z:Image /icons/play.png, Width=20, Height=20}" Command="{Binding GoCommand}" />
+                <MenuItem Header="_Stop" Icon="{z:Image /icons/stop.png, Width=20, Height=20}" Command="{Binding StopCommand}" />
                 <Separator />
                 <MenuItem Header="_Processes..." />
                 <MenuItem Header="_Executables..." />
@@ -34,16 +34,55 @@
                 <MenuItem Header="_Filter..." />
             </MenuItem>
             <MenuItem Header="_Options">
-                <MenuItem Header="_Always On Top" IsCheckable="True" IsChecked="{Binding Options.AlwaysOnTop, Mode=TwoWay}" Command="{Binding AlwaysOnTopCommand}" CommandParameter="{Binding ElementName=This}" />
+                <MenuItem Header="_Always On Top" IsCheckable="True" IsChecked="{Binding Options.AlwaysOnTop, Mode=TwoWay}" 
+                          Command="{Binding AlwaysOnTopCommand}" CommandParameter="{Binding ElementName=This}" />
                 <MenuItem Header="_Fonts..." />
                 <MenuItem Header="_Colors..." />
             </MenuItem>
         </Menu>
-        <ToolBar Grid.Row="1">
-            
+        <ToolBar Grid.Row="1" >
+            <ToolBar.Resources>
+                <Style x:Key="{x:Static ToolBar.ButtonStyleKey}" TargetType="Button">
+                    <Setter Property="MinWidth" Value="40" />
+                    <Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
+                    <Style.Triggers>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value=".4" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </ToolBar.Resources>
+            <Button Command="{Binding GoCommand}" ToolTip="Start Monitoring">
+                <Image Source="/icons/play.png" Width="24" Height="24" />
+            </Button>
+            <Button Command="{Binding StopCommand}" ToolTip="Stop Monitoring">
+                <Image Source="/icons/stop.png" Width="24" Height="24" />
+            </Button>
         </ToolBar>
-        <TabControl ItemsSource="{Binding TabItems}" Grid.Row="2">
-            
+        <TabControl ItemsSource="{Binding Tabs}" Grid.Row="2" SelectedItem="{Binding SelectedTab, Mode=TwoWay}">
+            <TabControl.ItemContainerStyle>
+                <Style TargetType="TabItem" >
+                    <Setter Property="MinWidth" Value="100" />
+                    <Setter Property="BorderThickness" Value="1" />
+                    <Setter Property="Background" Value="{DynamicResource WhiteBrush}" />
+                    <Setter Property="HeaderTemplate">
+                        <Setter.Value>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal" >
+                                    <Image Source="{Binding Icon}" Width="24" Height="24" />
+                                    <TextBlock Text="{Binding Header}" VerticalAlignment="Center" FontSize="12" Margin="4,0,0,0"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </Setter.Value>
+                    </Setter>
+                    <Style.Triggers>
+                        <Trigger Property="IsSelected" Value="True">
+                            <Setter Property="FontWeight" Value="Bold"  />
+                            <Setter Property="Background" Value="{DynamicResource AccentColorBrush4}" />
+                        </Trigger>
+                    </Style.Triggers>
+                </Style>
+            </TabControl.ItemContainerStyle>
         </TabControl>
         <StatusBar Grid.Row="3">
             <TextBlock Text="Ready" />

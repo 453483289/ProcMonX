@@ -13,4 +13,15 @@
         <Setter Property="MinHeight" Value="{Binding MinHeight}" />
         <Setter Property="SizeToContent" Value="{Binding SizeToContent}" />
     </Style>
+    <Style TargetType="ToolTip">
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ToolTip">
+                    <Border CornerRadius="5" BorderBrush="{DynamicResource BlackBrush}" BorderThickness="2" Padding="4" Background="{DynamicResource AccentColorBrush}" >
+                        <ContentPresenter TextElement.Foreground="{DynamicResource WhiteBrush}"/>
+                    </Border>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
 </ResourceDictionary>
