@@ -4,32 +4,66 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:metro="http://metro.mahapps.com/winfx/xaml/controls"
+             xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
              xmlns:local="clr-namespace:ProcMonX.Views"
-             xmlns:conv="clr-namespace:ProcMonX.Converters"
+             xmlns:z="http://zodiacon.wpf/2016"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
     <Grid>
         <Grid.Resources>
-            <conv:EventTypeToIconConverter x:Key="typeToIconConverter" />
         </Grid.Resources>
-        <DataGrid ItemsSource="{Binding Events}" IsReadOnly="True" AutoGenerateColumns="False" metro:ButtonHelper.PreserveTextCase="True" FrozenColumnCount="2">
+        <DataGrid ItemsSource="{Binding Items, Mode=OneTime}" IsReadOnly="True" AutoGenerateColumns="False" metro:ButtonHelper.PreserveTextCase="True" FrozenColumnCount="2"
+                  ScrollViewer.IsDeferredScrollingEnabled="True" VirtualizingPanel.IsContainerVirtualizable="True" VirtualizingPanel.VirtualizationMode="Recycling">
+            <i:Interaction.Behaviors>
+            </i:Interaction.Behaviors>
             <DataGrid.Columns>
+                <DataGridTextColumn Header="Index" Binding="{Binding Index, Mode=OneTime, IsAsync=True}" MinWidth="50" CanUserResize="False" ElementStyle="{StaticResource TextBlockRightAlignStyle}" />
                 <DataGridTemplateColumn Header="Event" CanUserReorder="False" CanUserResize="False" SortMemberPath="Type">
                     <DataGridTemplateColumn.CellTemplate>
                         <DataTemplate>
                             <StackPanel Orientation="Horizontal">
-                                <Image Source="{Binding Type, Converter={StaticResource typeToIconConverter}}" Width="20" Height="20" />
+                                <Image Source="{Binding Icon, Mode=OneTime, IsAsync=True}" Width="16" Height="16" />
                                 <TextBlock Text="{Binding TypeAsString}" Margin="2,0,0,0" VerticalAlignment="Center" />
                             </StackPanel>
                         </DataTemplate>
                     </DataGridTemplateColumn.CellTemplate>
                 </DataGridTemplateColumn>
-                <DataGridTextColumn Header="Index" Binding="{Binding Index}" CanUserResize="False" />
-                <DataGridTextColumn Header="Time" Binding="{Binding Data.TimeStamp}" />
-                <DataGridTextColumn Header="PID" Binding="{Binding Data.ProcessID}" />
-                <DataGridTextColumn Header="TID" Binding="{Binding Data.ThreadID}" />
-                <DataGridTextColumn Header="Process Name" Binding="{Binding Data.ProcessName}" />
+                <DataGridTextColumn Header="Time" Binding="{Binding Data.TimeStamp, StringFormat=\{0:HH:mm:ss.ffff\}, Mode=OneTime}" />
+                <DataGridTextColumn Header="PID" Binding="{Binding Data.ProcessID, Mode=OneTime}" />
+                <DataGridTextColumn Header="TID" Binding="{Binding ThreadId, Mode=OneTime}" />
+                <DataGridTextColumn Header="Opcode" Binding="{Binding Data.OpcodeName, Mode=OneTime}" />
+                <DataGridTextColumn Header="Process Name" Binding="{Binding Data.ProcessName, Mode=OneTime}" FontWeight="Bold" />
             </DataGrid.Columns>
-        </DataGrid>        
+        </DataGrid>
+        <!--<ListView ItemsSource="{Binding Items, Mode=OneTime}" metro:ButtonHelper.PreserveTextCase="True" VirtualizingPanel.IsVirtualizing="True">
+            <ListView.View>
+                <GridView>
+                    <GridView.Columns>
+                        <GridViewColumn Header="Index" DisplayMemberBinding="{Binding Index, Mode=OneTime}" />
+                        <GridViewColumn Header="Event" >
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <StackPanel Orientation="Horizontal">
+                                        <Image Source="{Binding Icon, Mode=OneTime}" Width="16" Height="16" />
+                                        <TextBlock Text="{Binding TypeAsString, Mode=OneTime}" Margin="2,0,0,0" VerticalAlignment="Center" />
+                                    </StackPanel>
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                        <GridViewColumn Header="Time" DisplayMemberBinding="{Binding Data.TimeStamp, Mode=OneTime}" />
+                        <GridViewColumn Header="PID" DisplayMemberBinding="{Binding Data.ProcessID, Mode=OneTime}" />
+                        <GridViewColumn Header="TID" DisplayMemberBinding="{Binding ThreadId, Mode=OneTime}" />
+                        <GridViewColumn Header="Opcode" DisplayMemberBinding="{Binding Data.OpcodeName, Mode=OneTime}" />
+                        <GridViewColumn Header="Process Name" Width="140">
+                            <GridViewColumn.CellTemplate>
+                                <DataTemplate>
+                                    <TextBlock Text="{Binding Data.ProcessName, Mode=OneTime}" FontWeight="Bold" />
+                                </DataTemplate>
+                            </GridViewColumn.CellTemplate>
+                        </GridViewColumn>
+                    </GridView.Columns>
+                </GridView>
+            </ListView.View>
+        </ListView>-->
     </Grid>
 </UserControl>

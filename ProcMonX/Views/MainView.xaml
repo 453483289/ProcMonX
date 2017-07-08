@@ -5,8 +5,13 @@
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ProcMonX.Views"
              xmlns:z="http://zodiacon.wpf/2016" x:Name="This"
+             xmlns:conv="clr-namespace:ProcMonX.Converters"
+             xmlns:ext="clr-namespace:ProcMonX.Extensions"
              mc:Ignorable="d" 
              d:DesignHeight="300" d:DesignWidth="300">
+    <UserControl.Resources>
+        <conv:ToolbarIconConverter x:Key="toolbarIconConverter" />
+    </UserControl.Resources>
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="Auto" />
@@ -25,8 +30,8 @@
                 <MenuItem Header="_Copy" Command="Copy" Icon="{z:Image /icons/copy.ico, Width=20, Height=20}" />
             </MenuItem>
             <MenuItem Header="_Monitor">
-                <MenuItem Header="_Go" Icon="{z:Image /icons/play.png, Width=20, Height=20}" Command="{Binding GoCommand}" />
-                <MenuItem Header="_Stop" Icon="{z:Image /icons/stop.png, Width=20, Height=20}" Command="{Binding StopCommand}" />
+                <MenuItem Header="_Go" Icon="{z:Image /icons/normal/play.ico, Width=20, Height=20}" Command="{Binding GoCommand}" />
+                <MenuItem Header="_Stop" Icon="{z:Image /icons/normal/stop.ico, Width=20, Height=20}" Command="{Binding StopCommand}" />
                 <Separator />
                 <MenuItem Header="_Processes..." />
                 <MenuItem Header="_Executables..." />
@@ -45,21 +50,31 @@
                 <Style x:Key="{x:Static ToolBar.ButtonStyleKey}" TargetType="Button">
                     <Setter Property="MinWidth" Value="40" />
                     <Setter Property="ToolTipService.ShowOnDisabled" Value="True" />
+                    <Setter Property="ContentTemplate">
+                        <Setter.Value>
+                            <DataTemplate>
+                                <Image x:Name="image" 
+                                    Source="{Binding Path=(ext:IconProperties.Icon), RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Converter={StaticResource toolbarIconConverter}, ConverterParameter=normal}" Width="32" Height="32" />
+                                <DataTemplate.Triggers>
+                                    <DataTrigger Value="True" Binding="{Binding IsMouseOver, RelativeSource={RelativeSource FindAncestor, AncestorType=Button}}">
+                                        <Setter Property="Source" TargetName="image" Value="{Binding Path=(ext:IconProperties.Icon), RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Converter={StaticResource toolbarIconConverter}, ConverterParameter=hot}" />
+                                    </DataTrigger>
+                                    <DataTrigger Value="False" Binding="{Binding IsEnabled, RelativeSource={RelativeSource FindAncestor, AncestorType=Button}}">
+                                        <Setter Property="Source" TargetName="image" Value="{Binding Path=(ext:IconProperties.Icon), RelativeSource={RelativeSource Mode=FindAncestor, AncestorType=Button}, Converter={StaticResource toolbarIconConverter}, ConverterParameter=disabled}" />
+                                    </DataTrigger>
+                                </DataTemplate.Triggers>
+                            </DataTemplate>
+                        </Setter.Value>
+                    </Setter>
                     <Style.Triggers>
-                        <Trigger Property="IsEnabled" Value="False">
-                            <Setter Property="Opacity" Value=".4" />
-                        </Trigger>
                     </Style.Triggers>
                 </Style>
             </ToolBar.Resources>
-            <Button Command="{Binding GoCommand}" ToolTip="Start Monitoring">
-                <Image Source="/icons/play.png" Width="24" Height="24" />
-            </Button>
-            <Button Command="{Binding StopCommand}" ToolTip="Stop Monitoring">
-                <Image Source="/icons/stop.png" Width="24" Height="24" />
-            </Button>
+            <Button Command="{Binding GoCommand}" ToolTip="Start Monitoring" ext:IconProperties.Icon="play" />
+            <Button Command="{Binding StopCommand}" ToolTip="Stop Monitoring" ext:IconProperties.Icon="stop" />
+            <Separator />
         </ToolBar>
-        <TabControl ItemsSource="{Binding Tabs}" Grid.Row="2" SelectedItem="{Binding SelectedTab, Mode=TwoWay}">
+        <TabControl ItemsSource="{Binding Tabs}" Grid.Row="2" SelectedItem="{Binding SelectedTab, Mode=TwoWay}" z:TabControlProperties.IsCached="True">
             <TabControl.ItemContainerStyle>
                 <Style TargetType="TabItem" >
                     <Setter Property="MinWidth" Value="100" />
@@ -69,7 +84,7 @@
                         <Setter.Value>
                             <DataTemplate>
                                 <StackPanel Orientation="Horizontal" >
-                                    <Image Source="{Binding Icon}" Width="24" Height="24" />
+                                    <Image Source="{Binding Icon}" Width="24" Height="24" x:Name="icon" />
                                     <TextBlock Text="{Binding Header}" VerticalAlignment="Center" FontSize="12" Margin="4,0,0,0"/>
                                 </StackPanel>
                             </DataTemplate>
@@ -85,7 +100,7 @@
             </TabControl.ItemContainerStyle>
         </TabControl>
         <StatusBar Grid.Row="3">
-            <TextBlock Text="Ready" />
+            <TextBlock Text="{Binding Events.Count}" />
         </StatusBar>
     </Grid>
 </UserControl>

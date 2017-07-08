@@ -6,14 +6,23 @@ using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Data;
+using System.ComponentModel;
 
 namespace ProcMonX.ViewModels {
-	[TabItem(CanClose = false, Header = "All Events", Icon = "/icons/event.png")]
 	class EventsTabViewModel : TabViewModelBase {
-		public EventsTabViewModel(IList<TraceEventData> events) {
-			Events = events;
+		readonly CollectionViewSource _cvs;
+
+		public ICollectionView Items => _cvs.View;
+
+		public EventsTabViewModel(IEnumerable<TraceEventDataViewModel> events, Func<TraceEventDataViewModel, bool> filter = null) {
+			_cvs = new CollectionViewSource() {
+				Source = events
+			};
+			_cvs.View.Filter = filter == null ? default(Predicate<object>) : o => filter((TraceEventDataViewModel)o);
 		}
-		public IList<TraceEventData> Events { get; }
+
+		public IEnumerable<TraceEventDataViewModel> Events { get; }
 
 	}
 }

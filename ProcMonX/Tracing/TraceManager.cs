@@ -10,74 +10,81 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Threading;
+using ProcMonX.Models;
 
 namespace ProcMonX.Tracing {
-	[Flags]
-	enum TraceElements {
-		None = 0,
-		Process = KernelTraceEventParser.Keywords.Process,
-		Thread = KernelTraceEventParser.Keywords.Thread,
-		File = KernelTraceEventParser.Keywords.FileIO,
-		ImageLoad = KernelTraceEventParser.Keywords.ImageLoad,
-		Registry = KernelTraceEventParser.Keywords.Registry,
-		VirtualAlloc = KernelTraceEventParser.Keywords.VirtualAlloc,
-		Driver = KernelTraceEventParser.Keywords.Driver,
-		Network = KernelTraceEventParser.Keywords.NetworkTCPIP,
-		ThreadPriority = KernelTraceEventParser.Keywords.ThreadPriority
-	}
-
-	enum EventType {
-		None,
-		ProcessStart, ProcessStop,
-		ThreadStart, ThreadStop,
-		VirtualAlloc, VirtualFree,
-		RegistryOPenKey, RegistryQueryValue
-	}
 
 	sealed class TraceManager : IDisposable {
 		TraceEventSession _session;
 		KernelTraceEventParser _parser;
 		Thread _processingThread;
+		bool _includeInit;
 
 		public event Action<ProcessTraceData, EventType> ProcessTrace;
 		public event Action<ThreadTraceData, EventType> ThreadTrace;
+		public event Action<RegistryTraceData, EventType> RegistryTrace;
 
 		public TraceManager() {
-			_session = new TraceEventSession(KernelTraceEventParser.KernelSessionName) {
-				BufferSizeMB = 128,
-				CpuSampleIntervalMSec = 10
-			};
 		}
 
 		public void Dispose() {
 			_session.Dispose();
 		}
 
-		public void Start(TraceElements elements) {
+		public void Start(TraceElements elements, bool includeInit) {
+			_includeInit = includeInit;
+			_session = new TraceEventSession(KernelTraceEventParser.KernelSessionName) {
+				BufferSizeMB = 128,
+				CpuSampleIntervalMSec = 10
+			};
+			_session.EnableKernelProvider((KernelTraceEventParser.Keywords)elements);
+
 			_processingThread = new Thread(() => {
-				_session.EnableKernelProvider((KernelTraceEventParser.Keywords)elements);
 				_parser = new KernelTraceEventParser(_session.Source);
 				SetupCallbacks(elements);
 				_session.Source.Process();
 			});
-			_processingThread.Priority = ThreadPriority.BelowNormal;
+			_processingThread.Priority = ThreadPriority.Lowest;
 			_processingThread.IsBackground = true;
 			_processingThread.Start();
 		}
 
 
 		public void Stop() {
-			_session.Source.StopProcessing();
+			_session.Flush();
+			_session.Stop();
 		}
 
 		private void SetupCallbacks(TraceElements elements) {
 			if (elements.HasFlag(TraceElements.Process)) {
 				_parser.ProcessStart += OnProcessStart;
+				if (_includeInit) {
+					_parser.ProcessDCStart += OnProcessDCStart;
+					_parser.ProcessDCStop += obj => ProcessTrace?.Invoke((ProcessTraceData)obj.Clone(), EventType.ProcessExited);
+				}
 				_parser.ProcessStop += OnProcessStop;
 			}
 			if (elements.HasFlag(TraceElements.Thread)) {
-				_parser.ThreadStart += OnThreadStart; ;
+				_parser.ThreadStart += OnThreadStart;
+				_parser.ThreadStop += OnThreadStop;
 			}
+			if (elements.HasFlag(TraceElements.Registry)) {
+				_parser.RegistryCreate += OnRegistryCreate;
+				_parser.RegistryOpen += obj => RegistryTrace?.Invoke((RegistryTraceData)obj.Clone(), EventType.RegistryOpenKey);
+			}
+		}
+
+		private void OnRegistryCreate(RegistryTraceData obj) {
+			RegistryTrace?.Invoke((RegistryTraceData)obj.Clone(), EventType.RegistryCreateKey);
+		}
+
+		private void OnProcessDCStart(ProcessTraceData obj) {
+			var data = (ProcessTraceData)obj.Clone();
+			ProcessTrace?.Invoke(data, EventType.ProcessExists);
+		}
+
+		private void OnThreadStop(ThreadTraceData obj) {
+			ThreadTrace?.Invoke((ThreadTraceData)obj.Clone(), EventType.ThreadStop);
 		}
 
 		private void OnProcessStop(ProcessTraceData obj) {
